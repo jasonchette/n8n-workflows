@@ -1,0 +1,575 @@
+{
+  "name": "The Force Feed — Salesforce Newsletter",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "eca9066b-29cf-4bf7-b132-52950db6482b",
+      "name": "Every Weekday at 5AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.salesforce.com/blog/feed",
+        "options": {}
+      },
+      "id": "0f62a614-4bb4-42e3-afc5-59e93b58a1dc",
+      "name": "RSS - SF Blog",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -1104
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "b35456e9-245b-45fa-a8ed-4a3627577cb7",
+      "name": "Merge All Feeds",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.salesforce.com/news/feed",
+        "options": {}
+      },
+      "id": "13d26e92-b43d-4688-afe2-d1c46496f1b3",
+      "name": "RSS - SF News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://admin.salesforce.com/feed",
+        "options": {}
+      },
+      "id": "93d92ebf-7dbf-495e-b8b7-8dc8c4fbc941",
+      "name": "RSS - SF Admin",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.salesforceben.com/feed",
+        "options": {}
+      },
+      "id": "7d61722f-1bbc-41f8-abef-8b80f97e68b9",
+      "name": "RSS - SalesforceBen",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://unofficialsf.com/feed",
+        "options": {}
+      },
+      "id": "8a6036f4-1102-476e-ad71-dfa116f315f7",
+      "name": "RSS - UnofficialSF",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://salesforce.stackexchange.com/feeds",
+        "options": {}
+      },
+      "id": "d06d44e8-4cd6-49b1-bb3b-b56d00081d44",
+      "name": "RSS - Stack Exchange",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://bobbuzzard.blogspot.com/feeds/posts/default?alt=rss",
+        "options": {}
+      },
+      "id": "f9637370-48a1-437a-a356-2b62bfbf54f7",
+      "name": "RSS - Bob Buzzard",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.salesforcecodex.com/feed",
+        "options": {}
+      },
+      "id": "b9c0bee2-fa08-4989-8f34-0d8dc38ff72f",
+      "name": "RSS - SF Codex",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://thespotforpardot.com/feed",
+        "options": {}
+      },
+      "id": "49e23389-09fa-4d63-90ae-c4e246ad0101",
+      "name": "RSS - Spot for Pardot",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/tag/salesforce/feed",
+        "options": {}
+      },
+      "id": "c38bb4df-ae23-47d8-ae2c-7de4b14880d4",
+      "name": "RSS - TechCrunch SF",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst cutoff = Date.now() - 24 * 60 * 60 * 1000;\nconst seen = new Set();\nconst results = [];\nfor (const item of items) {\n  const j = item.json;\n  const title = (j.title || '').trim();\n  const url = (j.link || j.url || '').trim();\n  const pubDate = j.pubDate || j.isoDate || j.date || '';\n  const description = j.contentSnippet || j.content || j.description || j.summary || '';\n  const source = j.feedUrl || (j.meta && j.meta.title) || url;\n  if (!title || !url) continue;\n  const pub = pubDate ? new Date(pubDate).getTime() : Date.now();\n  if (pub < cutoff) continue;\n  const key = url || title.toLowerCase().slice(0, 60);\n  if (seen.has(key)) continue;\n  seen.add(key);\n  results.push({ json: { title, url, source, published: pubDate, description: description.slice(0, 400) } });\n}\nreturn results;"
+      },
+      "id": "a6ade461-6133-45cc-88fa-bf936432e99c",
+      "name": "Deduplicate & Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nlet articleList = '';\nitems.forEach((item, i) => {\n  const j = item.json;\n  articleList += (i + 1) + '. TITLE: ' + j.title + '\\nURL: ' + j.url + '\\nSOURCE: ' + j.source + '\\nPUBLISHED: ' + j.published + '\\nSUMMARY: ' + j.description + '\\n\\n';\n});\nconst prompt = 'You are the editor of \"The Force Feed\", a daily Salesforce ecosystem newsletter. Review the following ' + items.length + ' articles collected from RSS feeds in the past 24 hours.\\n\\nYour task:\\n1. Score each article 1-10 for relevance and interest to Salesforce professionals\\n2. Assign each article one section: TOP_STORY | ECOSYSTEM_NEWS | ADMIN_DEV | APPEXCHANGE | COMMUNITY\\n3. Write a 2-sentence newsletter summary for each selected article\\n4. Select the 12-14 best articles across the sections\\n\\nReturn ONLY a valid JSON array (no markdown, no preamble) in this exact format:\\n[\\n  {\\n    \"rank\": 1,\\n    \"score\": 9,\\n    \"section\": \"TOP_STORY\",\\n    \"title\": \"Article title\",\\n    \"url\": \"Article URL\",\\n    \"source\": \"Source name\",\\n    \"summary\": \"Two sentence newsletter summary.\"\\n  }\\n]\\n\\nARTICLES:\\n' + articleList;\nreturn [{ json: { prompt } }];"
+      },
+      "id": "307a81dc-6660-4e13-8a28-086e66aa9f17",
+      "name": "Build Claude Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-opus-4-5"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 4096
+        }
+      },
+      "id": "7bc12d1f-6813-4e7c-82d5-68b665c75dd7",
+      "name": "Claude - Rank & Summarize",
+      "type": "@n8n/n8n-nodes-langchain.anthropic",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -240
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": "6Y5eIPqPwFRSVLuy",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.text || ($input.first().json.content && $input.first().json.content[0] && $input.first().json.content[0].text) || '';\nlet articles = [];\ntry {\n  const cleaned = raw.replace(/^```json\\s*/, '').replace(/```\\s*$/, '').trim();\n  articles = JSON.parse(cleaned);\n} catch(e) {\n  throw new Error('Failed to parse Claude response: ' + raw.slice(0, 200));\n}\nconst sections = {\n  TOP_STORY:      { label: '\\uD83D\\uDD25 Top Story',           color: '#E8F4FD', border: '#0070D2', items: [] },\n  ECOSYSTEM_NEWS: { label: '\\uD83D\\uDCF0 Ecosystem News',       color: '#FFF3E0', border: '#FF6B35', items: [] },\n  ADMIN_DEV:      { label: '\\u2699\\uFE0F Admin & Dev Picks',    color: '#E8F5E9', border: '#4CAF50', items: [] },\n  APPEXCHANGE:    { label: '\\uD83D\\uDCE6 AppExchange Watch',    color: '#F3E5F5', border: '#9C27B0', items: [] },\n  COMMUNITY:      { label: '\\uD83D\\uDCAC Community Spotlight',  color: '#FFF8E1', border: '#FFC107', items: [] }\n};\nfor (const a of articles) {\n  if (sections[a.section]) sections[a.section].items.push(a);\n}\nconst months = ['January','February','March','April','May','June','July','August','September','October','November','December'];\nconst days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];\nconst now = new Date();\nconst today = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();\nconst subject = 'The Force Feed \\u00B7 ' + today;\nlet html = '<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>' + subject + '</title></head><body style=\"font-family:sans-serif;max-width:680px;margin:0 auto;padding:20px;background:#f5f5f5;\"><div style=\"background:#0070D2;color:white;padding:30px;border-radius:8px 8px 0 0;text-align:center;\"><h1 style=\"margin:0;font-size:28px;\">\\u26A1 The Force Feed</h1><p style=\"margin:8px 0 0;opacity:0.9;font-size:14px;\">' + today + ' \\u00B7 Your daily Salesforce briefing</p></div><div style=\"background:white;padding:20px;border-radius:0 0 8px 8px;\">';\nfor (const key of Object.keys(sections)) {\n  const sec = sections[key];\n  if (sec.items.length === 0) continue;\n  html += '<div style=\"margin-bottom:30px;\"><h2 style=\"color:' + sec.border + ';border-left:4px solid ' + sec.border + ';padding-left:12px;margin-bottom:16px;\">' + sec.label + '</h2>';\n  for (const a of sec.items) {\n    html += '<div style=\"background:' + sec.color + ';border:1px solid ' + sec.border + ';border-radius:6px;padding:16px;margin-bottom:12px;\"><h3 style=\"margin:0 0 8px;font-size:16px;\"><a href=\"' + a.url + '\" style=\"color:#0070D2;text-decoration:none;\">' + a.title + '</a></h3><p style=\"margin:0 0 8px;color:#444;line-height:1.5;font-size:14px;\">' + a.summary + '</p><p style=\"margin:0;font-size:12px;color:#888;\">\\uD83D\\uDCE1 ' + a.source + '</p></div>';\n  }\n  html += '</div>';\n}\nhtml += '</div><p style=\"text-align:center;font-size:12px;color:#999;margin-top:16px;\">The Force Feed \\u00B7 Automated Salesforce News Digest</p></body></html>';\nreturn [{ json: { html, subject, itemCount: articles.length } }];"
+      },
+      "id": "4d3bfb4c-2a93-4865-8826-d3fdcc87d71c",
+      "name": "Assemble HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "Jason.blanchette27@gmail.com",
+        "subject": "={{ '\\u2705 Force Feed Draft Ready \\u2014 ' + $('Assemble HTML').first().json.subject }}",
+        "message": "={{ '<strong>\\u2705 The Force Feed draft is ready!</strong><br><br>\\uD83D\\uDCCA ' + $('Assemble HTML').first().json.itemCount + ' articles curated.<br><br>Log in to Beehiiv to review before the 7:00 AM send window.<br><br><em>\\u2014 The Force Feed Automation</em>' }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e58757a6-3e5c-4ee0-a188-7d3e96ee6457",
+      "name": "Success Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        -336
+      ],
+      "webhookId": "3c4398fc-aa36-4aca-b2b1-84d78bbe9a38",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VVqiatbkyvHxoFYl",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "Jason.blanchette27@gmail.com",
+        "subject": "\\u274C Force Feed Automation FAILED",
+        "message": "The Force Feed workflow encountered an error. Please check your n8n execution logs for details.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "42411e80-d14b-4121-889a-df1cb283583c",
+      "name": "Error Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        -144
+      ],
+      "webhookId": "3abb9282-5fd0-4f6c-bb80-7f4e497e1ff9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "VVqiatbkyvHxoFYl",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "Jason.blanchette27@gmail.com",
+        "subject": "=\"{{ $json.subject }}\"",
+        "message": "=\"{{ $json.html }}\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        -336
+      ],
+      "id": "a2f4041d-d639-4be0-a9f3-97055ca7da4e",
+      "name": "Send a message",
+      "webhookId": "716ee08a-5782-423a-bb2b-494b97bcdf85",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "dYaLWCErWMkuq7GA",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Weekday at 5AM": {
+      "main": [
+        [
+          {
+            "node": "RSS - SF Blog",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - SF News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - SF Admin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - SalesforceBen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - UnofficialSF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - Stack Exchange",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - Bob Buzzard",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - SF Codex",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - Spot for Pardot",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS - TechCrunch SF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS - SF Blog": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Feeds": {
+      "main": [
+        [
+          {
+            "node": "Deduplicate & Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS - SF News": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "RSS - SF Admin": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "RSS - SalesforceBen": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "RSS - UnofficialSF": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "RSS - Stack Exchange": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "RSS - Bob Buzzard": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "RSS - SF Codex": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 10
+          }
+        ]
+      ]
+    },
+    "RSS - Spot for Pardot": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 11
+          }
+        ]
+      ]
+    },
+    "RSS - TechCrunch SF": {
+      "main": [
+        [
+          {
+            "node": "Merge All Feeds",
+            "type": "main",
+            "index": 14
+          }
+        ]
+      ]
+    },
+    "Deduplicate & Filter": {
+      "main": [
+        [
+          {
+            "node": "Build Claude Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Claude Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude - Rank & Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude - Rank & Summarize": {
+      "main": [
+        [
+          {
+            "node": "Assemble HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble HTML": {
+      "main": [
+        [
+          {
+            "node": "Error Alert Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Success Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "7ba3ee50-e78a-4441-8432-a1133576ab53",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f9e582c39d8869c62c75166b43b75e341cc2b7f6061e2d0df4d98a7edf05896c"
+  },
+  "id": "ZnpjB1W4CDfaacUP",
+  "tags": []
+}
