@@ -58,6 +58,12 @@ Pulls fresh stats + ADP and generates a single self-contained HTML dashboard
 - **Head to Head** — pick any two players and see the per-category points
   breakdown side by side, including two-way players
 
+Rankings and Head to Head both have a time-window selector (Full season /
+Last 30 / Last 14 / Last 7 days), so you can rank or compare players on
+recent form instead of season totals — each window's stats are pulled at
+build time via the MLB Stats API's date-range endpoint and baked into the
+page. The Value Board stays season-scoped since ADP is a draft-time concept.
+
 Outputs `output/dashboard.html` (open it in any browser) and
 `output/dashboard_artifact.html` (body-only variant for claude.ai artifact
 publishing). The page supports light and dark themes automatically. Re-run

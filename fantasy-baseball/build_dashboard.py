@@ -101,18 +101,31 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
     abbr = team_abbrevs()
+    today = datetime.date.today()
 
-    print(f"Pulling {args.season} batting stats...")
-    bat = batting_rows(build_batting(args.season), abbr)
-    print(f"Pulling {args.season} pitching stats...")
-    pit = pitching_rows(build_pitching(args.season), abbr)
+    periods = []
+    for pid, label, days in [
+        ("season", "Full season", None),
+        ("d30", "Last 30 days", 30),
+        ("d14", "Last 14 days", 14),
+        ("d7", "Last 7 days", 7),
+    ]:
+        start = (today - datetime.timedelta(days=days)).isoformat() if days else None
+        end = today.isoformat() if days else None
+        print(f"Pulling {args.season} stats — {label.lower()}...")
+        periods.append({
+            "id": pid,
+            "label": label,
+            "bat": batting_rows(build_batting(args.season, start, end), abbr),
+            "pit": pitching_rows(build_pitching(args.season, start, end), abbr),
+        })
+
     delta = adp_rows(build_delta_table(args.season))
 
     data = {
         "season": args.season,
-        "generated": datetime.date.today().isoformat(),
-        "batting": bat,
-        "pitching": pit,
+        "generated": today.isoformat(),
+        "periods": periods,
         "adp": delta,
     }
     payload = json.dumps(data, separators=(",", ":"), ensure_ascii=False)

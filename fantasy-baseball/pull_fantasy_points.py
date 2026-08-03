@@ -24,7 +24,7 @@ def _parse_innings(ip_str: str) -> float:
     return int(whole) + thirds.get(frac, 0.0)
 
 
-def fetch_stats(season: int, group: str) -> pd.DataFrame:
+def fetch_stats(season: int, group: str, start_date: str = None, end_date: str = None) -> pd.DataFrame:
     params = {
         "stats": "season",
         "group": group,
@@ -33,6 +33,8 @@ def fetch_stats(season: int, group: str) -> pd.DataFrame:
         "limit": 2000,
         "playerPool": "ALL",
     }
+    if start_date and end_date:
+        params.update({"stats": "byDateRange", "startDate": start_date, "endDate": end_date})
     resp = requests.get(STATS_API, params=params, headers=HEADERS, timeout=30)
     resp.raise_for_status()
     splits = resp.json()["stats"][0]["splits"]
@@ -48,8 +50,8 @@ def fetch_stats(season: int, group: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def build_batting(season: int) -> pd.DataFrame:
-    df = fetch_stats(season, "hitting")
+def build_batting(season: int, start_date: str = None, end_date: str = None) -> pd.DataFrame:
+    df = fetch_stats(season, "hitting", start_date, end_date)
     df = df.rename(columns={
         "hits": "H", "doubles": "2B", "triples": "3B", "homeRuns": "HR",
         "baseOnBalls": "BB", "hitByPitch": "HBP", "runs": "R", "rbi": "RBI",
@@ -59,8 +61,8 @@ def build_batting(season: int) -> pd.DataFrame:
     return add_batting_points(df)
 
 
-def build_pitching(season: int) -> pd.DataFrame:
-    df = fetch_stats(season, "pitching")
+def build_pitching(season: int, start_date: str = None, end_date: str = None) -> pd.DataFrame:
+    df = fetch_stats(season, "pitching", start_date, end_date)
     df["IP"] = df["inningsPitched"].apply(_parse_innings)
     df = df.rename(columns={
         "strikeOuts": "SO", "saves": "SV", "holds": "HLD",

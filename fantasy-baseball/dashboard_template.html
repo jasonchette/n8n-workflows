@@ -448,6 +448,7 @@
         <button class="chip" aria-pressed="true" data-pool="bat">Batters</button>
         <button class="chip" aria-pressed="false" data-pool="pit">Pitchers</button>
       </div>
+      <div class="chipset period-chips" role="group" aria-label="Time window"></div>
       <input type="search" id="rank-search" placeholder="Search player or team…" aria-label="Search players">
     </div>
     <div class="tablebox">
@@ -491,6 +492,9 @@
 
   <!-- ================= HEAD TO HEAD ================= -->
   <section class="view" id="view-h2h">
+    <div class="controls">
+      <div class="chipset period-chips" role="group" aria-label="Time window"></div>
+    </div>
     <div class="h2h-pick">
       <span class="pick-a"><input type="text" id="pick-a" list="players" placeholder="Player A" aria-label="Player A"></span>
       <span class="vs">vs</span>
@@ -520,10 +524,33 @@ const f1 = (n) => {
 };
 const f0 = (n) => Math.round(n).toLocaleString("en-US");
 
+/* ---------- period state ---------- */
+let period = 0;
+const PER = () => DATA.periods[period];
+const SEASON = DATA.periods[0];
+
+function renderPeriodChips() {
+  document.querySelectorAll(".period-chips").forEach(box => {
+    box.innerHTML = DATA.periods.map((p, i) =>
+      `<button class="chip" aria-pressed="${i === period}" data-period="${i}">${esc(p.label)}</button>`
+    ).join("");
+  });
+}
+document.addEventListener("click", (e) => {
+  const chip = e.target.closest(".period-chips .chip");
+  if (!chip) return;
+  period = Number(chip.dataset.period);
+  renderPeriodChips();
+  rankLimit = 150;
+  renderTiles();
+  renderRankings();
+  renderH2H();
+});
+
 /* ---------- header meta ---------- */
 $("meta").innerHTML =
   `<b>${DATA.season}</b> season · data through <b>${esc(DATA.generated)}</b> · ` +
-  `${DATA.batting.length} batters · ${DATA.pitching.length} pitchers · ${DATA.adp.length} drafted`;
+  `${SEASON.bat.length} batters · ${SEASON.pit.length} pitchers · ${DATA.adp.length} drafted`;
 
 /* ---------- tabs ---------- */
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
@@ -542,7 +569,7 @@ const RANK_COLS = {
 let pool = "bat", rankSort = {key:"fp", dir:-1}, rankLimit = 150;
 
 function rankRows() {
-  const src = pool === "bat" ? DATA.batting : DATA.pitching;
+  const src = pool === "bat" ? PER().bat : PER().pit;
   const q = $("rank-search").value.trim().toLowerCase();
   let rows = src.map(p => {
     const flat = {name: p.n, team: p.t, fp: p.fp, ...p.s};
@@ -607,18 +634,19 @@ $("rank-search").addEventListener("input", () => { rankLimit = 150; renderRankin
 function tile(k, v, s) {
   return `<div class="tile"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="s">${s}</div></div>`;
 }
-(function tiles() {
-  const tb = DATA.batting[0];
-  const tp = DATA.pitching[0];
-  const relief = DATA.pitching.filter(p => (p.s.SV + p.s.HLD) >= 5)[0];
-  const floored = DATA.adp.filter(a => a.d != null && (a.pa >= 100 || a.ip >= 30));
-  const steal = floored[0];
+function renderTiles() {
+  const p = PER();
+  const win = period === 0 ? "" : ` · ${p.label.toLowerCase()}`;
+  const tb = p.bat[0];
+  const tp = p.pit[0];
+  const relief = p.pit.filter(x => (x.s.SV + x.s.HLD) >= (period === 0 ? 5 : 1))[0];
+  const steal = DATA.adp.filter(a => a.d != null && (a.pa >= 100 || a.ip >= 30))[0];
   $("rank-tiles").innerHTML =
-    tile("Top Batter", tb.n, `${esc(tb.t)} · <span class="fp">${f1(tb.fp)} FP</span>`) +
-    tile("Top Pitcher", tp.n, `${esc(tp.t)} · <span class="fp">${f1(tp.fp)} FP</span>`) +
-    (relief ? tile("Top Reliever", relief.n, `${f0(relief.s.SV)} SV / ${f0(relief.s.HLD)} HLD · <span class="fp">${f1(relief.fp)} FP</span>`) : "") +
-    (steal ? tile("Steal of the Draft", steal.n, `ADP ${f0(steal.ar)} → #${f0(steal.fr)} · <span class="fp">+${f0(steal.d)}</span>`) : "");
-})();
+    (tb ? tile("Top Batter", tb.n, `${esc(tb.t)} · <span class="fp">${f1(tb.fp)} FP</span>${win}`) : "") +
+    (tp ? tile("Top Pitcher", tp.n, `${esc(tp.t)} · <span class="fp">${f1(tp.fp)} FP</span>${win}`) : "") +
+    (relief ? tile("Top Reliever", relief.n, `${f0(relief.s.SV)} SV / ${f0(relief.s.HLD)} HLD · <span class="fp">${f1(relief.fp)} FP</span>${win}`) : "") +
+    (steal ? tile("Steal of the Draft", steal.n, `ADP ${f0(steal.ar)} → #${f0(steal.fr)} · <span class="fp">+${f0(steal.d)}</span> · full season`) : "");
+}
 
 /* =========================================================
    VALUE BOARD
@@ -706,15 +734,14 @@ $("value-search").addEventListener("input", () => { valLimit = 100; renderValue(
 /* =========================================================
    HEAD TO HEAD
    ========================================================= */
-const BY_NAME = {};
-DATA.batting.forEach(p => { (BY_NAME[p.n] = BY_NAME[p.n] || {}).bat = p; });
-DATA.pitching.forEach(p => { (BY_NAME[p.n] = BY_NAME[p.n] || {}).pit = p; });
-$("players").innerHTML = Object.keys(BY_NAME).sort()
+const NAME_MAPS = DATA.periods.map(p => {
+  const m = {};
+  p.bat.forEach(x => { (m[x.n] = m[x.n] || {}).bat = x; });
+  p.pit.forEach(x => { (m[x.n] = m[x.n] || {}).pit = x; });
+  return m;
+});
+$("players").innerHTML = Object.keys(NAME_MAPS[0]).sort()
   .map(n => `<option value="${esc(n)}"></option>`).join("");
-
-function playerFP(rec) {
-  return (rec.bat ? rec.bat.fp : 0) + (rec.pit ? rec.pit.fp : 0);
-}
 
 function bdSection(title, weights, sa, sb, nameA, nameB) {
   const cats = Object.keys(weights);
@@ -767,13 +794,22 @@ function renderH2H() {
   const nameB = $("pick-b").value.trim();
   const out = $("h2h-out");
   if (!nameA || !nameB) { out.innerHTML = ""; return; }
-  const a = BY_NAME[nameA], b = BY_NAME[nameB];
-  const missing = [!a && nameA, !b && nameB].filter(Boolean);
+  const missing = [!NAME_MAPS[0][nameA] && nameA, !NAME_MAPS[0][nameB] && nameB].filter(Boolean);
   if (missing.length) {
     out.innerHTML = `<div class="err">No ${DATA.season} stats found for <b>${esc(missing.join('" and "'))}</b>. Pick a name from the suggestions list.</div>`;
     return;
   }
+  const winMap = NAME_MAPS[period];
+  const a = winMap[nameA] || {}, b = winMap[nameB] || {};
+  const idle = [];
+  if (period > 0) {
+    if (!winMap[nameA]) idle.push(nameA);
+    if (!winMap[nameB]) idle.push(nameB);
+  }
   let html = "", totA = 0, totB = 0, hasPitch = false;
+  if (idle.length) {
+    html += `<div class="err">${esc(idle.join(" and "))} ${idle.length > 1 ? "have" : "has"} no games in the ${esc(PER().label.toLowerCase())} window — showing zeros.</div>`;
+  }
   if (a.bat || b.bat) {
     const s = bdSection("Hitting", BAT_W, a.bat && a.bat.s, b.bat && b.bat.s, nameA, nameB);
     totA += s.total[0]; totB += s.total[1]; html += s.html;
@@ -783,20 +819,24 @@ function renderH2H() {
     const s = bdSection("Pitching", PIT_W, a.pit && a.pit.s, b.pit && b.pit.s, nameA, nameB);
     totA += s.total[0]; totB += s.total[1]; html += s.html;
   }
+  const scope = period === 0 ? `${DATA.season} season totals` : PER().label.toLowerCase();
   const lead = totA === totB ? null : (totA > totB ? nameA : nameB);
   const verdict = lead === null
-    ? `<div class="lead">Dead even at <span class="fp">${f1(totA)}</span> fantasy points.</div>`
+    ? `<div class="lead">Dead even at <span class="fp">${f1(totA)}</span> fantasy points.</div>
+       <div class="sub">${esc(scope)} under league scoring</div>`
     : `<div class="lead">${esc(lead)} leads by <span class="fp">${f1(Math.abs(totA - totB))}</span> fantasy points.</div>
-       <div class="sub">${esc(nameA)} ${f1(totA)} · ${esc(nameB)} ${f1(totB)} · ${DATA.season} season totals under league scoring</div>`;
+       <div class="sub">${esc(nameA)} ${f1(totA)} · ${esc(nameB)} ${f1(totB)} · ${esc(scope)} under league scoring</div>`;
   out.innerHTML = `<div class="verdict">${verdict}</div>` + html +
     (hasPitch ? `<p class="note">Quality Starts aren't published by the MLB Stats API as a season total — scored as 0 here.</p>` : "");
 }
 
 $("pick-a").addEventListener("change", renderH2H);
 $("pick-b").addEventListener("change", renderH2H);
-$("pick-a").value = DATA.batting[0] ? DATA.batting[0].n : "";
-$("pick-b").value = DATA.batting[1] ? DATA.batting[1].n : "";
+$("pick-a").value = SEASON.bat[0] ? SEASON.bat[0].n : "";
+$("pick-b").value = SEASON.bat[1] ? SEASON.bat[1].n : "";
 
+renderPeriodChips();
+renderTiles();
 renderRankings();
 renderValue();
 renderH2H();
