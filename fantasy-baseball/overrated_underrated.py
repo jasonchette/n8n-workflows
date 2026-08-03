@@ -85,25 +85,14 @@ def build_fp_table(season: int) -> pd.DataFrame:
     return fp
 
 
-def main():
-    parser = argparse.ArgumentParser(description="ADP vs production rank deltas")
-    parser.add_argument("--season", type=int, default=2026)
-    parser.add_argument("--out-dir", default="output")
-    parser.add_argument("--top", type=int, default=15, help="How many names to print per list")
-    parser.add_argument("--min-pa", type=int, default=100,
-                        help="Playing-time floor for the printed lists: batters need this many PA")
-    parser.add_argument("--min-ip", type=int, default=30,
-                        help="Playing-time floor for the printed lists: pitchers need this many IP")
-    args = parser.parse_args()
-
-    os.makedirs(args.out_dir, exist_ok=True)
-
+def build_delta_table(season: int) -> pd.DataFrame:
+    """ADP joined to actual production, with RankDelta, sorted most-underrated first."""
     print("Pulling consensus ADP from FantasyPros...")
     adp = fetch_adp()
     print(f"  {len(adp)} drafted players")
 
-    print(f"Computing {args.season} fantasy points from the MLB Stats API...")
-    fp = build_fp_table(args.season)
+    print(f"Computing {season} fantasy points from the MLB Stats API...")
+    fp = build_fp_table(season)
 
     adp["_key"] = adp["Name"].map(norm_name)
     fp["_key"] = fp["Name"].map(norm_name)
@@ -130,11 +119,26 @@ def main():
 
     unmatched = merged["FantasyPoints"].isna().sum()
     if unmatched:
-        print(f"  Note: {unmatched} ADP players have no {args.season} MLB stats "
+        print(f"  Note: {unmatched} ADP players have no {season} MLB stats "
               f"(injured all year, in the minors, or name mismatch) — excluded from deltas.")
 
     merged["RankDelta"] = merged["ADP_Rank"] - merged["FP_Rank"]
-    merged = merged.sort_values("RankDelta", ascending=False)
+    return merged.sort_values("RankDelta", ascending=False)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="ADP vs production rank deltas")
+    parser.add_argument("--season", type=int, default=2026)
+    parser.add_argument("--out-dir", default="output")
+    parser.add_argument("--top", type=int, default=15, help="How many names to print per list")
+    parser.add_argument("--min-pa", type=int, default=100,
+                        help="Playing-time floor for the printed lists: batters need this many PA")
+    parser.add_argument("--min-ip", type=int, default=30,
+                        help="Playing-time floor for the printed lists: pitchers need this many IP")
+    args = parser.parse_args()
+
+    os.makedirs(args.out_dir, exist_ok=True)
+    merged = build_delta_table(args.season)
 
     out_path = os.path.join(args.out_dir, f"adp_value_deltas_{args.season}.csv")
     merged.to_csv(out_path, index=False)

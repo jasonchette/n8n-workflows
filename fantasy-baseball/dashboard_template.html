@@ -1,0 +1,803 @@
+<title>Show the F Up — Fantasy Dashboard</title>
+<style>
+  :root {
+    --ground: #F4F5F1;
+    --card: #FFFFFF;
+    --line: #DDE2DB;
+    --ink: #1B211D;
+    --ink-2: #55605A;
+    --ink-3: #8A948D;
+    --accent: #B45309;
+    --accent-soft: #B4530918;
+    --blue: #2563EB;
+    --blue-soft: #2563EB16;
+    --good: #08856A;
+    --good-soft: #08856A16;
+    --bad: #C2402A;
+    --bad-soft: #C2402A14;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #121815;
+      --card: #1A211D;
+      --line: #2C352F;
+      --ink: #E9EDE9;
+      --ink-2: #98A49D;
+      --ink-3: #6B776F;
+      --accent: #BD831C;
+      --accent-soft: #BD831C26;
+      --blue: #4A8BD4;
+      --blue-soft: #4A8BD426;
+      --good: #3FA98A;
+      --good-soft: #3FA98A22;
+      --bad: #E06B4F;
+      --bad-soft: #E06B4F20;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #121815;
+    --card: #1A211D;
+    --line: #2C352F;
+    --ink: #E9EDE9;
+    --ink-2: #98A49D;
+    --ink-3: #6B776F;
+    --accent: #BD831C;
+    --accent-soft: #BD831C26;
+    --blue: #4A8BD4;
+    --blue-soft: #4A8BD426;
+    --good: #3FA98A;
+    --good-soft: #3FA98A22;
+    --bad: #E06B4F;
+    --bad-soft: #E06B4F20;
+  }
+  :root[data-theme="light"] {
+    --ground: #F4F5F1;
+    --card: #FFFFFF;
+    --line: #DDE2DB;
+    --ink: #1B211D;
+    --ink-2: #55605A;
+    --ink-3: #8A948D;
+    --accent: #B45309;
+    --accent-soft: #B4530918;
+    --blue: #2563EB;
+    --blue-soft: #2563EB16;
+    --good: #08856A;
+    --good-soft: #08856A16;
+    --bad: #C2402A;
+    --bad-soft: #C2402A14;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  /* ---------- header ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-top: 8px;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin: 26px 0 22px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--ink-2);
+    padding: 10px 14px;
+    cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+  .tab:focus-visible, button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ---------- stat tiles ---------- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .tile {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .tile .k {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .tile .v {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 4px;
+    line-height: 1.3;
+  }
+  .tile .s {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .s .fp { color: var(--accent); font-weight: 700; }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .chipset { display: flex; gap: 6px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink-2);
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--ink);
+    font-weight: 700;
+  }
+  input[type="search"], input[type="text"] {
+    font-family: var(--sans);
+    font-size: 14px;
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-width: 200px;
+  }
+  input::placeholder { color: var(--ink-3); }
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  /* ---------- tables ---------- */
+  .tablebox {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 62vh;
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: right;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    cursor: pointer;
+    white-space: nowrap;
+    z-index: 1;
+  }
+  thead th.l { text-align: left; }
+  thead th[aria-sort] { color: var(--accent); }
+  tbody td {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding: 7px 12px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+    color: var(--ink-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td.l { text-align: left; }
+  tbody td.name { font-family: var(--sans); font-weight: 600; color: var(--ink); }
+  tbody td.fp { color: var(--accent); font-weight: 700; }
+  tbody td.pos-d { color: var(--good); font-weight: 700; }
+  tbody td.neg-d { color: var(--bad); font-weight: 700; }
+  tbody tr:hover td { background: var(--accent-soft); }
+  .morebar { text-align: center; padding: 10px; }
+  .morebtn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--ink-2);
+    padding: 6px 16px;
+    cursor: pointer;
+  }
+  .morebtn:hover { color: var(--ink); border-color: var(--accent); }
+
+  /* ---------- value board bars ---------- */
+  .panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .panel h3 {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    margin: 0 0 3px;
+  }
+  .panel h3 .dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    margin-right: 7px; vertical-align: baseline;
+  }
+  .panel.under h3 { color: var(--good); }
+  .panel.under h3 .dot { background: var(--good); }
+  .panel.over h3 { color: var(--bad); }
+  .panel.over h3 .dot { background: var(--bad); }
+  .panel .sub {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin: 0 0 14px;
+  }
+  .vrow { display: grid; grid-template-columns: 1fr 64px; gap: 10px; align-items: center; padding: 5px 0; }
+  .vrow .who { min-width: 0; }
+  .vrow .nm {
+    font-weight: 600; font-size: 13.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .vrow .mt { font-family: var(--mono); font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .vrow .barcell { grid-column: 1 / 2; height: 6px; background: none; margin-top: 2px; }
+  .vrow .bar { height: 6px; border-radius: 0 4px 4px 0; }
+  .panel.under .bar { background: var(--good); }
+  .panel.over .bar { background: var(--bad); }
+  .vrow .delta {
+    grid-row: 1 / 3; grid-column: 2;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    font-variant-numeric: tabular-nums; text-align: right;
+  }
+  .panel.under .delta { color: var(--good); }
+  .panel.over .delta { color: var(--bad); }
+
+  /* ---------- head to head ---------- */
+  .h2h-pick {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .h2h-pick .vs {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em;
+    color: var(--ink-3); text-transform: uppercase;
+  }
+  .h2h-pick input { width: 100%; min-width: 0; }
+  .pick-a input { border-left: 3px solid var(--blue); }
+  .pick-b input { border-left: 3px solid var(--accent); }
+  .verdict {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }
+  .verdict .lead { font-size: 16px; font-weight: 700; }
+  .verdict .lead .fp { color: var(--accent); }
+  .verdict .sub { font-family: var(--mono); font-size: 12px; color: var(--ink-2); margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .bd { margin-bottom: 18px; }
+  .bd h3 {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--ink-2); margin: 0 0 10px;
+  }
+  .bd .legend {
+    display: flex; gap: 18px; margin-bottom: 10px;
+    font-size: 12.5px; font-weight: 600;
+  }
+  .bd .legend .sw {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px;
+  }
+  .bdgrid {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+  }
+  .bdrow {
+    display: grid;
+    grid-template-columns: 100px 1fr 128px 1fr 100px;
+    gap: 10px;
+    align-items: center;
+    padding: 5px 0;
+    min-width: 560px;
+  }
+  .bdrow.head { border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 4px; }
+  .bdrow.head span {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .bdrow .cat {
+    text-align: center;
+    font-family: var(--mono); font-size: 12px; color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .bdrow .cat small { color: var(--ink-3); }
+  .bdrow .num {
+    font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .bdrow .num small { color: var(--ink-3); font-size: 11px; }
+  .bdrow .num.a { text-align: right; }
+  .bdrow .track { height: 7px; display: flex; }
+  .bdrow .track.a { justify-content: flex-end; }
+  .bdrow .bbar { height: 7px; border-radius: 4px; }
+  .bdrow .bbar.a { background: var(--blue); border-radius: 4px 0 0 4px; }
+  .bdrow .bbar.b { background: var(--accent); border-radius: 0 4px 4px 0; }
+  .bdrow .bbar.zero { border-radius: 4px; }
+  .bdrow.total { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 9px; }
+  .bdrow.total .num { font-weight: 700; }
+  .bdrow.total .win { color: var(--accent); }
+  .note { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); margin-top: 10px; }
+  .err {
+    background: var(--bad-soft); border: 1px solid var(--bad); border-radius: 8px;
+    color: var(--ink); padding: 12px 16px; font-size: 14px; margin-bottom: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .h2h-pick { grid-template-columns: 1fr; }
+    .h2h-pick .vs { text-align: center; }
+    .bdrow { grid-template-columns: 72px 1fr 96px 1fr 72px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .vrow .bar, .bdrow .bbar { transition: width 0.35s ease; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Show the F Up · CBS Points League</p>
+    <h1>Fantasy Baseball Dashboard</h1>
+    <p class="meta" id="meta"></p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-view="rankings">Rankings</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="value">Value Board</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="h2h">Head to Head</button>
+  </nav>
+
+  <!-- ================= RANKINGS ================= -->
+  <section class="view active" id="view-rankings">
+    <div class="tiles" id="rank-tiles"></div>
+    <div class="controls">
+      <div class="chipset" id="pool-chips">
+        <button class="chip" aria-pressed="true" data-pool="bat">Batters</button>
+        <button class="chip" aria-pressed="false" data-pool="pit">Pitchers</button>
+      </div>
+      <input type="search" id="rank-search" placeholder="Search player or team…" aria-label="Search players">
+    </div>
+    <div class="tablebox">
+      <table id="rank-table">
+        <thead><tr id="rank-head"></tr></thead>
+        <tbody id="rank-body"></tbody>
+      </table>
+      <div class="morebar" id="rank-more"></div>
+    </div>
+  </section>
+
+  <!-- ================= VALUE BOARD ================= -->
+  <section class="view" id="view-value">
+    <div class="controls">
+      <label class="check">
+        <input type="checkbox" id="floor-toggle" checked>
+        Hide low playing time (&lt;100 PA / &lt;30 IP)
+      </label>
+      <input type="search" id="value-search" placeholder="Search player…" aria-label="Search value board">
+    </div>
+    <div class="panels">
+      <div class="panel under">
+        <h3><span class="dot"></span>Underrated</h3>
+        <p class="sub">outproducing draft cost · Δ = ADP rank − points rank</p>
+        <div id="under-bars"></div>
+      </div>
+      <div class="panel over">
+        <h3><span class="dot"></span>Overrated</h3>
+        <p class="sub">drafted high, under-delivering</p>
+        <div id="over-bars"></div>
+      </div>
+    </div>
+    <div class="tablebox">
+      <table id="value-table">
+        <thead><tr id="value-head"></tr></thead>
+        <tbody id="value-body"></tbody>
+      </table>
+      <div class="morebar" id="value-more"></div>
+    </div>
+  </section>
+
+  <!-- ================= HEAD TO HEAD ================= -->
+  <section class="view" id="view-h2h">
+    <div class="h2h-pick">
+      <span class="pick-a"><input type="text" id="pick-a" list="players" placeholder="Player A" aria-label="Player A"></span>
+      <span class="vs">vs</span>
+      <span class="pick-b"><input type="text" id="pick-b" list="players" placeholder="Player B" aria-label="Player B"></span>
+    </div>
+    <datalist id="players"></datalist>
+    <div id="h2h-out"></div>
+  </section>
+</div>
+
+<script>
+const DATA = __DATA_JSON__;
+
+const BAT_W = {"1B":1,"2B":2,"3B":3,"HR":4,"BB":1,"HBP":1,"R":1,"RBI":1,"SB":2,"CS":-1,"SO":-0.5};
+const PIT_W = {"IP":3.5,"SO":1,"QS":2,"SV":6,"HLD":6,"BB":-0.75,"HBP":-0.75,"ER":-1.5,"H":-1.5};
+const LBL = {"1B":"Singles","2B":"Doubles","3B":"Triples","HR":"Home Runs","BB":"Walks",
+  "HBP":"Hit by Pitch","R":"Runs","RBI":"RBI","SB":"Stolen Bases","CS":"Caught Stealing",
+  "SO":"Strikeouts","IP":"Innings","QS":"Quality Starts","SV":"Saves","HLD":"Holds",
+  "ER":"Earned Runs","H":"Hits Allowed"};
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const f1 = (n) => {
+  let r = Math.round(n * 10) / 10;
+  if (r === 0) r = 0; /* normalize -0 so it never prints as "-0.0" */
+  return r.toLocaleString("en-US", {minimumFractionDigits:1, maximumFractionDigits:1});
+};
+const f0 = (n) => Math.round(n).toLocaleString("en-US");
+
+/* ---------- header meta ---------- */
+$("meta").innerHTML =
+  `<b>${DATA.season}</b> season · data through <b>${esc(DATA.generated)}</b> · ` +
+  `${DATA.batting.length} batters · ${DATA.pitching.length} pitchers · ${DATA.adp.length} drafted`;
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("view-" + t.dataset.view).classList.add("active");
+}));
+
+/* =========================================================
+   RANKINGS
+   ========================================================= */
+const RANK_COLS = {
+  bat: [["Name","name"],["Team","team"],["PA","PA"],["HR","HR"],["R","R"],["RBI","RBI"],["SB","SB"],["SO","SO"],["FP","fp"]],
+  pit: [["Name","name"],["Team","team"],["IP","IP"],["SO","SO"],["SV","SV"],["HLD","HLD"],["ER","ER"],["FP","fp"]],
+};
+let pool = "bat", rankSort = {key:"fp", dir:-1}, rankLimit = 150;
+
+function rankRows() {
+  const src = pool === "bat" ? DATA.batting : DATA.pitching;
+  const q = $("rank-search").value.trim().toLowerCase();
+  let rows = src.map(p => {
+    const flat = {name: p.n, team: p.t, fp: p.fp, ...p.s};
+    if (pool === "bat") flat.PA = p.PA; else flat.IP = p.IP;
+    return flat;
+  });
+  if (q) rows = rows.filter(r => r.name.toLowerCase().includes(q) || r.team.toLowerCase().includes(q));
+  const {key, dir} = rankSort;
+  rows.sort((a, b) => {
+    const av = a[key] ?? 0, bv = b[key] ?? 0;
+    if (typeof av === "string") return dir * av.localeCompare(bv);
+    return dir * (av - bv);
+  });
+  return rows;
+}
+
+function renderRankings() {
+  const cols = RANK_COLS[pool];
+  $("rank-head").innerHTML =
+    `<th class="l">#</th>` +
+    cols.map(([label, key]) =>
+      `<th class="${key === "name" || key === "team" ? "l" : ""}" data-key="${key}"` +
+      (rankSort.key === key ? ` aria-sort="${rankSort.dir < 0 ? "descending" : "ascending"}"` : "") +
+      `>${label}${rankSort.key === key ? (rankSort.dir < 0 ? " ↓" : " ↑") : ""}</th>`
+    ).join("");
+  const rows = rankRows();
+  const shown = rows.slice(0, rankLimit);
+  $("rank-body").innerHTML = shown.map((r, i) =>
+    `<tr><td class="l">${i + 1}</td>` +
+    cols.map(([, key]) => {
+      if (key === "name") return `<td class="l name">${esc(r.name)}</td>`;
+      if (key === "team") return `<td class="l">${esc(r.team)}</td>`;
+      const v = r[key] ?? 0;
+      const txt = (key === "fp" || key === "IP") ? f1(v) : f0(v);
+      return `<td class="${key === "fp" ? "fp" : ""}">${txt}</td>`;
+    }).join("") + "</tr>"
+  ).join("");
+  $("rank-more").innerHTML = rows.length > rankLimit
+    ? `<button class="morebtn" id="rank-more-btn">Show all ${rows.length}</button>` : "";
+  const btn = $("rank-more-btn");
+  if (btn) btn.addEventListener("click", () => { rankLimit = 10000; renderRankings(); });
+}
+
+$("rank-head").addEventListener("click", (e) => {
+  const th = e.target.closest("th[data-key]");
+  if (!th) return;
+  const key = th.dataset.key;
+  if (rankSort.key === key) rankSort.dir *= -1;
+  else rankSort = {key, dir: (key === "name" || key === "team") ? 1 : -1};
+  renderRankings();
+});
+document.querySelectorAll("#pool-chips .chip").forEach(c => c.addEventListener("click", () => {
+  pool = c.dataset.pool;
+  rankSort = {key: "fp", dir: -1};
+  rankLimit = 150;
+  document.querySelectorAll("#pool-chips .chip").forEach(x => x.setAttribute("aria-pressed", x === c));
+  renderRankings();
+}));
+$("rank-search").addEventListener("input", () => { rankLimit = 150; renderRankings(); });
+
+/* ---------- stat tiles ---------- */
+function tile(k, v, s) {
+  return `<div class="tile"><div class="k">${k}</div><div class="v">${esc(v)}</div><div class="s">${s}</div></div>`;
+}
+(function tiles() {
+  const tb = DATA.batting[0];
+  const tp = DATA.pitching[0];
+  const relief = DATA.pitching.filter(p => (p.s.SV + p.s.HLD) >= 5)[0];
+  const floored = DATA.adp.filter(a => a.d != null && (a.pa >= 100 || a.ip >= 30));
+  const steal = floored[0];
+  $("rank-tiles").innerHTML =
+    tile("Top Batter", tb.n, `${esc(tb.t)} · <span class="fp">${f1(tb.fp)} FP</span>`) +
+    tile("Top Pitcher", tp.n, `${esc(tp.t)} · <span class="fp">${f1(tp.fp)} FP</span>`) +
+    (relief ? tile("Top Reliever", relief.n, `${f0(relief.s.SV)} SV / ${f0(relief.s.HLD)} HLD · <span class="fp">${f1(relief.fp)} FP</span>`) : "") +
+    (steal ? tile("Steal of the Draft", steal.n, `ADP ${f0(steal.ar)} → #${f0(steal.fr)} · <span class="fp">+${f0(steal.d)}</span>`) : "");
+})();
+
+/* =========================================================
+   VALUE BOARD
+   ========================================================= */
+const VAL_COLS = [["Name","n"],["Pos","pos"],["Status","st"],["CBS ADP","cbs"],["Cons ADP","avg"],
+  ["ADP Rk","ar"],["FP Rk","fr"],["FP","fp"],["Δ","d"]];
+let valSort = {key: "d", dir: -1}, valLimit = 100;
+
+function valRows() {
+  const q = $("value-search").value.trim().toLowerCase();
+  const floor = $("floor-toggle").checked;
+  let rows = DATA.adp.slice();
+  if (floor) rows = rows.filter(r => r.d == null ? false : (r.pa >= 100 || r.ip >= 30));
+  if (q) rows = rows.filter(r => r.n.toLowerCase().includes(q));
+  const {key, dir} = valSort;
+  rows.sort((a, b) => {
+    const av = a[key], bv = b[key];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === "string") return dir * av.localeCompare(bv);
+    return dir * (av - bv);
+  });
+  return rows;
+}
+
+function vbar(r, max) {
+  const pct = Math.max(4, Math.round(Math.abs(r.d) / max * 100));
+  return `<div class="vrow">
+    <div class="who">
+      <div class="nm">${esc(r.n)}</div>
+      <div class="mt">${esc(r.pos)}${r.st ? " · " + esc(r.st) : ""} · ADP ${f0(r.ar)} → #${f0(r.fr)}</div>
+    </div>
+    <div class="delta">${r.d > 0 ? "+" : "−"}${f0(Math.abs(r.d))}</div>
+    <div class="barcell"><div class="bar" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function renderValue() {
+  const floor = $("floor-toggle").checked;
+  let pool = DATA.adp.filter(r => r.d != null);
+  if (floor) pool = pool.filter(r => r.pa >= 100 || r.ip >= 30);
+  const under = pool.filter(r => r.d > 0).sort((a, b) => b.d - a.d).slice(0, 12);
+  const over = pool.filter(r => r.d < 0).sort((a, b) => a.d - b.d).slice(0, 12);
+  const uMax = under.length ? under[0].d : 1;
+  const oMax = over.length ? Math.abs(over[0].d) : 1;
+  $("under-bars").innerHTML = under.map(r => vbar(r, uMax)).join("");
+  $("over-bars").innerHTML = over.map(r => vbar(r, oMax)).join("");
+
+  $("value-head").innerHTML = VAL_COLS.map(([label, key]) =>
+    `<th class="${key === "n" || key === "pos" || key === "st" ? "l" : ""}" data-key="${key}"` +
+    (valSort.key === key ? ` aria-sort="${valSort.dir < 0 ? "descending" : "ascending"}"` : "") +
+    `>${label}${valSort.key === key ? (valSort.dir < 0 ? " ↓" : " ↑") : ""}</th>`).join("");
+  const rows = valRows();
+  const shown = rows.slice(0, valLimit);
+  $("value-body").innerHTML = shown.map(r =>
+    `<tr>
+      <td class="l name">${esc(r.n)}</td>
+      <td class="l">${esc(r.pos)}</td>
+      <td class="l">${esc(r.st || "")}</td>
+      <td>${r.cbs == null ? "—" : f0(r.cbs)}</td>
+      <td>${r.avg == null ? "—" : f1(r.avg)}</td>
+      <td>${f0(r.ar)}</td>
+      <td>${r.fr == null ? "—" : f0(r.fr)}</td>
+      <td class="fp">${r.fp == null ? "—" : f1(r.fp)}</td>
+      <td class="${r.d > 0 ? "pos-d" : r.d < 0 ? "neg-d" : ""}">${r.d == null ? "—" : (r.d > 0 ? "+" : "−") + f0(Math.abs(r.d))}</td>
+    </tr>`).join("");
+  $("value-more").innerHTML = rows.length > valLimit
+    ? `<button class="morebtn" id="value-more-btn">Show all ${rows.length}</button>` : "";
+  const btn = $("value-more-btn");
+  if (btn) btn.addEventListener("click", () => { valLimit = 10000; renderValue(); });
+}
+
+$("value-head").addEventListener("click", (e) => {
+  const th = e.target.closest("th[data-key]");
+  if (!th) return;
+  const key = th.dataset.key;
+  if (valSort.key === key) valSort.dir *= -1;
+  else valSort = {key, dir: (key === "n" || key === "pos" || key === "st") ? 1 : -1};
+  renderValue();
+});
+$("floor-toggle").addEventListener("change", () => { valLimit = 100; renderValue(); });
+$("value-search").addEventListener("input", () => { valLimit = 100; renderValue(); });
+
+/* =========================================================
+   HEAD TO HEAD
+   ========================================================= */
+const BY_NAME = {};
+DATA.batting.forEach(p => { (BY_NAME[p.n] = BY_NAME[p.n] || {}).bat = p; });
+DATA.pitching.forEach(p => { (BY_NAME[p.n] = BY_NAME[p.n] || {}).pit = p; });
+$("players").innerHTML = Object.keys(BY_NAME).sort()
+  .map(n => `<option value="${esc(n)}"></option>`).join("");
+
+function playerFP(rec) {
+  return (rec.bat ? rec.bat.fp : 0) + (rec.pit ? rec.pit.fp : 0);
+}
+
+function bdSection(title, weights, sa, sb, nameA, nameB) {
+  const cats = Object.keys(weights);
+  const ptsOf = (s, c) => (s && s[c] != null ? s[c] : 0) * weights[c];
+  const maxPts = Math.max(1, ...cats.map(c => Math.max(Math.abs(ptsOf(sa, c)), Math.abs(ptsOf(sb, c)))));
+  let ta = 0, tb = 0;
+  const rows = cats.map(c => {
+    const ca = (sa && sa[c] != null) ? sa[c] : 0;
+    const cb = (sb && sb[c] != null) ? sb[c] : 0;
+    const pa = ca * weights[c], pb = cb * weights[c];
+    ta += pa; tb += pb;
+    const wa = Math.round(Math.abs(pa) / maxPts * 100);
+    const wb = Math.round(Math.abs(pb) / maxPts * 100);
+    const fmt = (c === "IP") ? f1 : f0;
+    return `<div class="bdrow">
+      <div class="num a">${fmt(ca)} <small>· ${f1(pa)}</small></div>
+      <div class="track a"><div class="bbar a" style="width:${wa}%"></div></div>
+      <div class="cat">${LBL[c]} <small>×${weights[c]}</small></div>
+      <div class="track"><div class="bbar b" style="width:${wb}%"></div></div>
+      <div class="num">${fmt(cb)} <small>· ${f1(pb)}</small></div>
+    </div>`;
+  }).join("");
+  return {
+    total: [ta, tb],
+    html: `<div class="bd">
+      <h3>${title}</h3>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--blue)"></span>${esc(nameA)}</span>
+        <span><span class="sw" style="background:var(--accent)"></span>${esc(nameB)}</span>
+      </div>
+      <div class="bdgrid">
+        <div class="bdrow head">
+          <span style="text-align:right">count · pts</span><span></span>
+          <span style="text-align:center">category</span><span></span>
+          <span style="text-align:right">count · pts</span>
+        </div>
+        ${rows}
+        <div class="bdrow total">
+          <div class="num a ${ta >= tb ? "win" : ""}">${f1(ta)}</div><div></div>
+          <div class="cat">subtotal</div><div></div>
+          <div class="num ${tb >= ta ? "win" : ""}">${f1(tb)}</div>
+        </div>
+      </div>
+    </div>`
+  };
+}
+
+function renderH2H() {
+  const nameA = $("pick-a").value.trim();
+  const nameB = $("pick-b").value.trim();
+  const out = $("h2h-out");
+  if (!nameA || !nameB) { out.innerHTML = ""; return; }
+  const a = BY_NAME[nameA], b = BY_NAME[nameB];
+  const missing = [!a && nameA, !b && nameB].filter(Boolean);
+  if (missing.length) {
+    out.innerHTML = `<div class="err">No ${DATA.season} stats found for <b>${esc(missing.join('" and "'))}</b>. Pick a name from the suggestions list.</div>`;
+    return;
+  }
+  let html = "", totA = 0, totB = 0, hasPitch = false;
+  if (a.bat || b.bat) {
+    const s = bdSection("Hitting", BAT_W, a.bat && a.bat.s, b.bat && b.bat.s, nameA, nameB);
+    totA += s.total[0]; totB += s.total[1]; html += s.html;
+  }
+  if (a.pit || b.pit) {
+    hasPitch = true;
+    const s = bdSection("Pitching", PIT_W, a.pit && a.pit.s, b.pit && b.pit.s, nameA, nameB);
+    totA += s.total[0]; totB += s.total[1]; html += s.html;
+  }
+  const lead = totA === totB ? null : (totA > totB ? nameA : nameB);
+  const verdict = lead === null
+    ? `<div class="lead">Dead even at <span class="fp">${f1(totA)}</span> fantasy points.</div>`
+    : `<div class="lead">${esc(lead)} leads by <span class="fp">${f1(Math.abs(totA - totB))}</span> fantasy points.</div>
+       <div class="sub">${esc(nameA)} ${f1(totA)} · ${esc(nameB)} ${f1(totB)} · ${DATA.season} season totals under league scoring</div>`;
+  out.innerHTML = `<div class="verdict">${verdict}</div>` + html +
+    (hasPitch ? `<p class="note">Quality Starts aren't published by the MLB Stats API as a season total — scored as 0 here.</p>` : "");
+}
+
+$("pick-a").addEventListener("change", renderH2H);
+$("pick-b").addEventListener("change", renderH2H);
+$("pick-a").value = DATA.batting[0] ? DATA.batting[0].n : "";
+$("pick-b").value = DATA.batting[1] ? DATA.batting[1].n : "";
+
+renderRankings();
+renderValue();
+renderH2H();
+</script>

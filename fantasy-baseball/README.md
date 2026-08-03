@@ -42,6 +42,28 @@ sorted highest to lowest. Includes every player who has appeared in a game
 this season (no minimum PA/IP cutoff), so part-timers and September-type
 call-ups are included alongside regulars.
 
+## Run: visual dashboard
+
+```
+python build_dashboard.py --season 2026
+```
+
+Pulls fresh stats + ADP and generates a single self-contained HTML dashboard
+(no server, no internet needed to view it) with three tabs:
+
+- **Rankings** — sortable, searchable full-league tables for batters and
+  pitchers, plus headline tiles (top batter/pitcher/reliever, steal of the draft)
+- **Value Board** — top-12 underrated and overrated bars with a playing-time
+  filter, plus the full sortable ADP-vs-production table
+- **Head to Head** — pick any two players and see the per-category points
+  breakdown side by side, including two-way players
+
+Outputs `output/dashboard.html` (open it in any browser) and
+`output/dashboard_artifact.html` (body-only variant for claude.ai artifact
+publishing). The page supports light and dark themes automatically. Re-run
+the script any time to refresh the data; the design lives in
+`dashboard_template.html`.
+
 ## Run: overrated / underrated finder
 
 ```
