@@ -27,7 +27,7 @@ cd fantasy-baseball
 pip install -r requirements.txt
 ```
 
-## Run
+## Run: full-league rankings
 
 ```
 python pull_fantasy_points.py --season 2026
@@ -41,3 +41,22 @@ Each row is a player with their raw stats plus a `FantasyPoints` column,
 sorted highest to lowest. Includes every player who has appeared in a game
 this season (no minimum PA/IP cutoff), so part-timers and September-type
 call-ups are included alongside regulars.
+
+## Run: head-to-head comparison
+
+```
+python compare_players.py "Yordan Alvarez" "James Wood" --season 2026
+```
+
+Looks up both players by name, pulls their season stats, and prints a
+side-by-side table showing each scoring category — the count, and the
+fantasy points it produced — plus a total and verdict line.
+
+Details worth knowing:
+- Two-way players (e.g. Shohei Ohtani) get both their hitting and pitching
+  points counted in their total.
+- If a name matches more than one active player (e.g. "Luis Garcia"), the
+  script lists the candidates with position and team, and asks you to be
+  more specific — it will never silently guess. Accents and suffixes both
+  work for narrowing it down ("Luis García Jr.").
+- Name matching is accent- and case-insensitive.

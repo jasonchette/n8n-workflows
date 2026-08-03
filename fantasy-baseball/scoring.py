@@ -29,6 +29,19 @@ PITCHING_WEIGHTS = {
 }
 
 
+def breakdown(stats: dict, weights: dict) -> dict:
+    """Per-category points for a single player's stat dict.
+
+    Returns {stat: (count, points)} for every stat in the weight table,
+    treating stats missing from the dict as 0.
+    """
+    result = {}
+    for stat, weight in weights.items():
+        count = stats.get(stat, 0) or 0
+        result[stat] = (count, count * weight)
+    return result
+
+
 def _score(df: pd.DataFrame, weights: dict) -> pd.Series:
     missing = [stat for stat in weights if stat not in df.columns]
     if missing:
