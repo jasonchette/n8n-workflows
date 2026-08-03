@@ -42,6 +42,29 @@ sorted highest to lowest. Includes every player who has appeared in a game
 this season (no minimum PA/IP cutoff), so part-timers and September-type
 call-ups are included alongside regulars.
 
+## Run: overrated / underrated finder
+
+```
+python overrated_underrated.py --season 2026
+```
+
+Pulls consensus ADP (average draft position) from FantasyPros, computes every
+drafted player's actual fantasy points, ranks both, and reports the gap:
+
+- **RankDelta = ADP rank − production rank.** Positive means the player is
+  outproducing their draft cost (underrated); negative means they were
+  drafted high and are under-delivering (overrated).
+- Prints the top 15 of each list and writes the full table to
+  `output/adp_value_deltas_<season>.csv`, including each player's CBS-specific
+  ADP alongside the consensus.
+- The printed lists apply a playing-time floor (default 100 PA / 30 IP,
+  adjustable with `--min-pa` / `--min-ip`) so season-long injuries and
+  demotions don't drown out actionable names; the CSV keeps everyone, with a
+  Status column (IL60, MiLB, etc.) explaining absences.
+- Name differences between sources (accents, suffixes like "Jr."/"II") are
+  handled automatically; players FantasyPros lists who have no MLB stats this
+  season are counted and noted rather than silently dropped.
+
 ## Run: head-to-head comparison
 
 ```
